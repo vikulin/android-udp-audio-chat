@@ -1,13 +1,17 @@
 package hw.dt83.udpchat
 
+import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.*
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import hw.dt83.udpchat.model.HostInfo
 import hw.dt83.udpchat.model.config.SelectHostInfoListAdapter
 import hw.dt83.udpchat.model.config.Utils.Companion.ping
@@ -80,9 +84,6 @@ class MainActivity : Activity() {
                 return@OnClickListener
             }
             // Collect details about the selected contact
-
-
-
             IN_CALL = true
 
             // Send this information to the MakeCallActivity and start that activity
@@ -90,6 +91,13 @@ class MainActivity : Activity() {
             intent.putStringArrayListExtra(HOST_LIST, serializeHostInfoSet2StringList(selectedHost))
             startActivity(intent)
         })
+        if (ContextCompat.checkSelfPermission(this,
+                        Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    arrayOf(Manifest.permission.RECORD_AUDIO),
+                    1234);
+        }
     }
 
     private fun addNewContact() {
