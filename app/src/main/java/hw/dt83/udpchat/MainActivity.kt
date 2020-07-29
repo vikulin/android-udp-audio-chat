@@ -59,8 +59,6 @@ class MainActivity : Activity() {
             var hostList = contactManager!!.getContacts()
             var adapter = SelectHostInfoListAdapter(this, ArrayList(hostList), HashSet())
             findViewById<ListView>(R.id.peerList).adapter = adapter
-            adapter.addAll(hostList)
-            adapter.notifyDataSetChanged()
         }
 
         val btnUpdate = findViewById<View>(R.id.buttonAddContact) as Button

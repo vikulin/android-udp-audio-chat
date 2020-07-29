@@ -30,29 +30,29 @@ class SelectHostInfoListAdapter(
     }
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-        var dnsInfoHolder = HostInfoHolder()
+        var hostInfoHolder = HostInfoHolder()
         var listItem: View? = convertView
         if (listItem == null) {
             listItem = LayoutInflater.from(mContext).inflate(R.layout.host_list_item_edit, parent, false)
-            dnsInfoHolder.checkbox = listItem.findViewById(R.id.checkbox) as CheckBox
-            dnsInfoHolder.dnsInfoText = listItem.findViewById(R.id.hostInfoText) as TextView
-            dnsInfoHolder.ping = listItem.findViewById(R.id.ping) as TextView
-            listItem.tag = dnsInfoHolder
+            hostInfoHolder.checkbox = listItem.findViewById(R.id.checkbox) as CheckBox
+            hostInfoHolder.dnsInfoText = listItem.findViewById(R.id.hostInfoText) as TextView
+            hostInfoHolder.ping = listItem.findViewById(R.id.ping) as TextView
+            listItem.tag = hostInfoHolder
         } else {
-            dnsInfoHolder = listItem.tag as HostInfoHolder
+            hostInfoHolder = listItem.tag as HostInfoHolder
         }
         val currentHost = allHost[position]
         val dnsId = currentHost.toString()
         if(currentHost.ping == Int.MAX_VALUE){
-            dnsInfoHolder.dnsInfoText.text = dnsId
-            dnsInfoHolder.ping.text=""
-            dnsInfoHolder.dnsInfoText.setTextColor(Color.GRAY)
+            hostInfoHolder.dnsInfoText.text = dnsId
+            hostInfoHolder.ping.text=""
+            hostInfoHolder.dnsInfoText.setTextColor(Color.GRAY)
         } else {
-            dnsInfoHolder.dnsInfoText.text = dnsId
-            dnsInfoHolder.ping.text = currentHost.ping.toString() + " ms"
-            dnsInfoHolder.dnsInfoText.setTextColor(Color.WHITE)
+            hostInfoHolder.dnsInfoText.text = dnsId
+            hostInfoHolder.ping.text = currentHost.ping.toString() + " ms"
+            hostInfoHolder.dnsInfoText.setTextColor(Color.WHITE)
         }
-        dnsInfoHolder.checkbox.setOnCheckedChangeListener { _, isChecked ->
+        hostInfoHolder.checkbox.setOnCheckedChangeListener { _, isChecked ->
             if(isChecked){
                 if(!this.currentHost.contains(currentHost)){
                     this.currentHost.add(currentHost)
@@ -63,7 +63,7 @@ class SelectHostInfoListAdapter(
                 }
             }
         }
-        dnsInfoHolder.checkbox.isChecked = this.currentHost.contains(currentHost)
+        hostInfoHolder.checkbox.isChecked = this.currentHost.contains(currentHost)
         return listItem!!
     }
 
