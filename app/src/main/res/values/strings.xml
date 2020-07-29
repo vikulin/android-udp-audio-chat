@@ -7,7 +7,7 @@
     <string name="submitName">Start</string>
     <string name="call">Call Contact</string>
     <string name="selectContact">Select a contact to call: </string>
-    <string name="update">Update Contacts</string>
+    <string name="add_contact">Add Contact</string>
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_make_call">UDPChat</string>
     <string name="calling">"Calling: "</string>

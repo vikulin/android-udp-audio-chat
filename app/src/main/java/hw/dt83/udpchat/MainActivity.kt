@@ -3,13 +3,22 @@ package hw.dt83.udpchat
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.*
+import hw.dt83.udpchat.model.HostInfo
+import hw.dt83.udpchat.model.config.SelectHostInfoListAdapter
+import hw.dt83.udpchat.model.config.Utils.Companion.ping
+import hw.dt83.udpchat.model.config.Utils.Companion.serializeHostInfoSet2StringList
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.net.DatagramPacket
 import java.net.DatagramSocket
+import java.net.InetAddress
 import java.net.SocketException
 
 class MainActivity : Activity() {
@@ -35,28 +44,32 @@ class MainActivity : Activity() {
             btnStart.isEnabled = false
             val text = findViewById<View>(R.id.textViewSelectContact) as TextView
             text.visibility = View.VISIBLE
-            val updateButton = findViewById<View>(R.id.buttonUpdate) as Button
+            val updateButton = findViewById<View>(R.id.buttonAddContact) as Button
             updateButton.visibility = View.VISIBLE
             val callButton = findViewById<View>(R.id.buttonCall) as Button
             callButton.visibility = View.VISIBLE
-            val scrollView = findViewById<View>(R.id.scrollView) as ScrollView
-            scrollView.visibility = View.VISIBLE
-            contactManager = ContactManager()
+            val listView = findViewById<View>(R.id.peerList) as ListView
+            listView.visibility = View.VISIBLE
+            contactManager = ContactManager(this.baseContext)
             startCallListener()
+            var hostList = contactManager!!.getContacts()
+            var adapter = SelectHostInfoListAdapter(this, ArrayList(hostList), HashSet())
+            findViewById<ListView>(R.id.peerList).adapter = adapter
+            adapter.addAll(hostList)
+            adapter.notifyDataSetChanged()
         }
 
-        // UPDATE BUTTON
-        // Updates the list of reachable devices
-        val btnUpdate = findViewById<View>(R.id.buttonUpdate) as Button
-        btnUpdate.setOnClickListener { updateContactList() }
+        val btnUpdate = findViewById<View>(R.id.buttonAddContact) as Button
+        btnUpdate.setOnClickListener { addNewContact() }
 
         // CALL BUTTON
         // Attempts to initiate an audio chat session with the selected device
         val btnCall = findViewById<View>(R.id.buttonCall) as Button
         btnCall.setOnClickListener(View.OnClickListener {
-            val radioGroup = findViewById<View>(R.id.contactList) as RadioGroup
-            val selectedButton = radioGroup.checkedRadioButtonId
-            if (selectedButton == -1) {
+            var selectAdapter = (findViewById<ListView>(R.id.peerList).adapter as SelectHostInfoListAdapter)
+            var selectedHost = selectAdapter.getSelectedHost()
+
+            if (selectedHost.isEmpty()) {
                 // If no device was selected, present an error message to the user
                 Log.w(LOG_TAG, "Warning: no contact selected")
                 val alert = AlertDialog.Builder(this@MainActivity).create()
@@ -67,43 +80,45 @@ class MainActivity : Activity() {
                 return@OnClickListener
             }
             // Collect details about the selected contact
-            val radioButton = findViewById<View>(selectedButton) as RadioButton
-            val contact = radioButton.text.toString()
-            val ip = contactManager!!.contacts[contact]
+
+
+
             IN_CALL = true
 
             // Send this information to the MakeCallActivity and start that activity
             val intent = Intent(this@MainActivity, MakeCallActivity::class.java)
-            intent.putExtra(EXTRA_CONTACT, contact)
-            var address = ip.toString()
-            address = address.substring(1, address.length)
-            intent.putExtra(EXTRA_IP, address)
-            intent.putExtra(EXTRA_DISPLAYNAME, displayName)
+            intent.putStringArrayListExtra(HOST_LIST, serializeHostInfoSet2StringList(selectedHost))
             startActivity(intent)
         })
     }
 
-    private fun updateContactList() {
-        // Create a copy of the HashMap used by the ContactManager
-        val contacts = contactManager!!.contacts
-        // Create a radio button for each contact in the HashMap
-        val radioGroup = findViewById<View>(R.id.contactList) as RadioGroup
-        radioGroup.removeAllViews()
-        for (name in contacts.keys) {
-            val radioButton = RadioButton(baseContext)
-            radioButton.text = name
-            radioButton.setTextColor(Color.BLACK)
-            radioGroup.addView(radioButton)
-        }
-        radioGroup.clearCheck()
-    }
+    private fun addNewContact() {
+        val view: View = LayoutInflater.from(this).inflate(R.layout.new_host_dialog, null)
 
-    private fun toBroadcastIp(ip: Int): String {
-        // Returns converts an IP address in int format to a formatted string
-        return (ip and 0xFF).toString() + "." +
-                (ip shr 8 and 0xFF) + "." +
-                (ip shr 16 and 0xFF) + "." +
-                "255"
+        val ab: AlertDialog.Builder = AlertDialog.Builder(this)
+        ab.setCancelable(true).setView(view)
+        var ad = ab.show()
+        var addButton = view.findViewById<Button>(R.id.add)
+        addButton.setOnClickListener{
+            var ipInput = view.findViewById<TextView>(R.id.ipInput)
+            var ip = ipInput.text.toString().toLowerCase()
+            GlobalScope.launch {
+                var di = HostInfo(InetAddress.getByName("["+ip+"]"),"User contact")
+                try {
+                    var ping = ping(di.address, 50002)
+                    di.ping = ping
+                } catch(e: Throwable){
+                    di.ping = Int.MAX_VALUE
+                }
+                withContext(Dispatchers.Main) {
+                    var selectAdapter = (findViewById<ListView>(R.id.peerList).adapter as SelectHostInfoListAdapter)
+                    selectAdapter.addItem(0, di)
+                    selectAdapter.notifyDataSetChanged()
+                    ad.dismiss()
+                    contactManager?.addContact(di)
+                }
+            }
+        }
     }
 
     private fun startCallListener() {
@@ -185,11 +200,12 @@ class MainActivity : Activity() {
         Log.i(LOG_TAG, "App restarted!")
         IN_CALL = false
         STARTED = true
-        contactManager = ContactManager()
+        contactManager = ContactManager(this.baseContext)
         startCallListener()
     }
 
     companion object {
+        const val HOST_LIST = "HOST_LIST"
         const val LOG_TAG = "UDPchat"
         private const val LISTENER_PORT = 50003
         private const val BUF_SIZE = 1024

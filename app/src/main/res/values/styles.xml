@@ -13,8 +13,17 @@
     </style>
 
     <!-- Application theme. -->
-    <style name="AppTheme" parent="AppBaseTheme">
+    <style name="AppTheme" parent="Theme.MaterialComponents">
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
+    </style>
+
+    <style name="EditText.OutlinedBox" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="android:textColorHint"> @color/white </item>
+        <item name="hintTextColor"> @color/white </item>
+    </style>
+
+    <style name="SwitchTheme" parent="Theme.AppCompat.Light">
+
     </style>
 
 </resources>

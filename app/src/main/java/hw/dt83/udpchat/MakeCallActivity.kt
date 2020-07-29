@@ -7,13 +7,14 @@ import android.view.Menu
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import hw.dt83.udpchat.model.config.Utils.Companion.deserializeStringList2HostInfoSet
 import java.io.IOException
 import java.net.*
 
 class MakeCallActivity : Activity() {
     private var displayName: String? = null
     private var contactName: String? = null
-    private var contactIp: String? = null
+    private var address: InetAddress? = null
     private var LISTEN = true
     private var IN_CALL = false
     private var call: AudioCall? = null
@@ -21,10 +22,14 @@ class MakeCallActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_make_call)
         Log.i(LOG_TAG, "MakeCallActivity started!")
-        val intent = intent
-        displayName = intent.getStringExtra(MainActivity.EXTRA_DISPLAYNAME)
-        contactName = intent.getStringExtra(MainActivity.EXTRA_CONTACT)
-        contactIp = intent.getStringExtra(MainActivity.EXTRA_IP)
+        var extras = intent.extras
+        var cd = deserializeStringList2HostInfoSet(
+                extras!!.getStringArrayList(MainActivity.HOST_LIST)!!
+        )
+        var host = cd.iterator().next()
+        contactName = host.description
+        displayName  =host.description
+        address = host.address
         val textView = findViewById<View>(R.id.textViewCalling) as TextView
         textView.text = "Calling: $contactName"
         startListener()
@@ -97,6 +102,7 @@ class MakeCallActivity : Activity() {
                 return@Runnable
             } catch (e: SocketException) {
                 Log.e(LOG_TAG, "SocketException in Listener")
+                e.printStackTrace()
                 endCall()
             }
         })
@@ -112,16 +118,15 @@ class MakeCallActivity : Activity() {
         // Creates a thread used for sending notifications
         val replyThread = Thread(Runnable {
             try {
-                val address = InetAddress.getByName(contactIp)
                 val data = message.toByteArray()
                 val socket = DatagramSocket()
                 val packet = DatagramPacket(data, data.size, address, port)
                 socket.send(packet)
-                Log.i(LOG_TAG, "Sent message( $message ) to $contactIp")
+                Log.i(LOG_TAG, "Sent message( $message ) to $address")
                 socket.disconnect()
                 socket.close()
             } catch (e: UnknownHostException) {
-                Log.e(LOG_TAG, "Failure. UnknownHostException in sendMessage: $contactIp")
+                Log.e(LOG_TAG, "Failure. UnknownHostException in sendMessage: $address")
             } catch (e: SocketException) {
                 Log.e(LOG_TAG, "Failure. SocketException in sendMessage: $e")
             } catch (e: IOException) {

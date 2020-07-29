@@ -54,11 +54,11 @@
         android:layout_height="wrap_content" >
 
             <Button
-                android:id="@+id/buttonUpdate"
+                android:id="@+id/buttonAddContact"
                 style="?android:attr/buttonStyleSmall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/update"
+                android:text="@string/add_contact"
                 android:visibility="invisible" />
 	    
             <Button
@@ -69,19 +69,12 @@
 	            android:text="@string/call"
 	            android:visibility="invisible" />
 	 	</LinearLayout>
-    
-    <ScrollView
-        android:id="@+id/scrollView"
+
+    <ListView
+        android:id="@+id/peerList"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="invisible" >
+        android:divider="@color/dark_20"
+        android:dividerHeight="2px"/>
 
-        <RadioGroup
-            android:id="@+id/contactList"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
-                
-        </RadioGroup>
-    </ScrollView>
-    
 </LinearLayout>
