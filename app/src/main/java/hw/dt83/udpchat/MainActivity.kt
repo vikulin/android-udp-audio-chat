@@ -61,8 +61,8 @@ class MainActivity : Activity() {
             findViewById<ListView>(R.id.peerList).adapter = adapter
         }
 
-        val btnUpdate = findViewById<View>(R.id.buttonAddContact) as Button
-        btnUpdate.setOnClickListener { addNewContact() }
+        val btnAddContact = findViewById<View>(R.id.buttonAddContact) as Button
+        btnAddContact.setOnClickListener { addNewContact() }
 
         // CALL BUTTON
         // Attempts to initiate an audio chat session with the selected device
