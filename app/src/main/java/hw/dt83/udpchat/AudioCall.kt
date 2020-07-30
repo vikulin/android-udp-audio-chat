@@ -40,8 +40,8 @@ class AudioCall(// Address to call
             // Create an instance of the AudioRecord class
             Log.i(LOG_TAG, "Send thread started. Thread id: " + Thread.currentThread().id)
             val audioRecorder = AudioRecord(MediaRecorder.AudioSource.VOICE_COMMUNICATION, SAMPLE_RATE,
-                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,
-                    AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT) * 10)
+                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_AAC_HE_V2,
+                    AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_AAC_HE_V2) * 10)
             var bytes_read = 0
             var bytes_sent = 0
             val buf = ByteArray(BUF_SIZE)
@@ -56,7 +56,7 @@ class AudioCall(// Address to call
                     val packet = DatagramPacket(buf, bytes_read, address, port)
                     socket.send(packet)
                     bytes_sent += bytes_read
-                    Log.i(LOG_TAG, "Total bytes sent: $bytes_sent")
+                    //Log.i(LOG_TAG, "Total bytes sent: $bytes_sent")
                     Thread.sleep(SAMPLE_INTERVAL.toLong(), 0)
                 }
                 // Stop recording and release resources
@@ -90,8 +90,9 @@ class AudioCall(// Address to call
             val receiveThread = Thread(Runnable {
                 // Create an instance of AudioTrack, used for playing back audio
                 Log.i(LOG_TAG, "Receive thread started. Thread id: " + Thread.currentThread().id)
-                val track = AudioTrack(AudioManager.STREAM_MUSIC, SAMPLE_RATE, AudioFormat.CHANNEL_OUT_MONO,
-                        AudioFormat.ENCODING_PCM_16BIT, BUF_SIZE, AudioTrack.MODE_STREAM)
+                val track = AudioTrack(AudioManager.STREAM_VOICE_CALL, SAMPLE_RATE, AudioFormat.CHANNEL_OUT_MONO,
+                        AudioFormat.ENCODING_AAC_HE_V2, BUF_SIZE, AudioTrack.MODE_STREAM)
+
                 track.play()
                 try {
                     // Define a socket to receive the audio
