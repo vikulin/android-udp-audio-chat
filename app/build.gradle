@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId "hw.dt83.udpchat"
-        minSdkVersion 14
+        minSdkVersion 17
         targetSdkVersion 29
         versionCode 1
         versionName "0.1"

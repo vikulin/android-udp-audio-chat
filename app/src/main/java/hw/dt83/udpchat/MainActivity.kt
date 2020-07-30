@@ -46,7 +46,6 @@ class MainActivity : UDPMessageActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         Log.i(LOG_TAG, "UDPChat started")
-
         contactManager = ContactManager(this.baseContext)
         startCallListener()
         var hostList = contactManager!!.getContacts()

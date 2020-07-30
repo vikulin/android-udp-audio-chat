@@ -5,8 +5,19 @@ import android.util.Log
 import java.io.IOException
 import java.net.*
 
-class AudioCall(// Address to call
+class AudioCall(
+        private val sampleRate: Int,
         private val address: InetAddress) {
+
+    companion object {
+        private const val LOG_TAG = "AudioCall"
+        //private const val SAMPLE_RATE = 8000 // Hertz
+        private const val SAMPLE_INTERVAL = 20 // Milliseconds
+        private const val SAMPLE_SIZE = 2 // Bytes
+        private const val BUF_SIZE = SAMPLE_INTERVAL * SAMPLE_INTERVAL * SAMPLE_SIZE * 2 //Bytes
+    }
+
+
     private val port = 50000 // Port the packets are addressed to
     private var mic = false // Enable mic?
     private var speakers = false // Enable speakers?
@@ -35,9 +46,9 @@ class AudioCall(// Address to call
         val thread = Thread(Runnable {
             // Create an instance of the AudioRecord class
             Log.i(LOG_TAG, "Send thread started. Thread id: " + Thread.currentThread().id)
-            val audioRecorder = AudioRecord(MediaRecorder.AudioSource.VOICE_COMMUNICATION, SAMPLE_RATE,
-                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_AAC_HE_V2,
-                    AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_AAC_HE_V2) * 10)
+            val audioRecorder = AudioRecord(MediaRecorder.AudioSource.VOICE_COMMUNICATION, sampleRate,
+                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,
+                    AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT) * 10)
             var bytes_read = 0
             var bytes_sent = 0
             val buf = ByteArray(BUF_SIZE)
@@ -89,8 +100,8 @@ class AudioCall(// Address to call
             val receiveThread = Thread(Runnable {
                 // Create an instance of AudioTrack, used for playing back audio
                 Log.i(LOG_TAG, "Receive thread started. Thread id: " + Thread.currentThread().id)
-                val track = AudioTrack(AudioManager.STREAM_VOICE_CALL, SAMPLE_RATE, AudioFormat.CHANNEL_OUT_MONO,
-                        AudioFormat.ENCODING_AAC_HE_V2, BUF_SIZE, AudioTrack.MODE_STREAM)
+                val track = AudioTrack(AudioManager.STREAM_VOICE_CALL, sampleRate, AudioFormat.CHANNEL_OUT_MONO,
+                        AudioFormat.ENCODING_PCM_16BIT, BUF_SIZE, AudioTrack.MODE_STREAM)
 
                 track.play()
                 try {
@@ -123,13 +134,4 @@ class AudioCall(// Address to call
             receiveThread.start()
         }
     }
-
-    companion object {
-        private const val LOG_TAG = "AudioCall"
-        private const val SAMPLE_RATE = 8000 // Hertz
-        private const val SAMPLE_INTERVAL = 20 // Milliseconds
-        private const val SAMPLE_SIZE = 2 // Bytes
-        private const val BUF_SIZE = SAMPLE_INTERVAL * SAMPLE_INTERVAL * SAMPLE_SIZE * 2 //Bytes
-    }
-
 }

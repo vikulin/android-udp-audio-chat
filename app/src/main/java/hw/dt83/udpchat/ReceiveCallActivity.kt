@@ -1,6 +1,10 @@
 package hw.dt83.udpchat
 
 import android.app.Activity
+import android.content.Context
+import android.media.AudioFormat
+import android.media.AudioManager
+import android.media.AudioRecord
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -9,6 +13,7 @@ import android.widget.Button
 import android.widget.TextView
 import java.io.IOException
 import java.net.*
+
 
 class ReceiveCallActivity : Activity() {
     private var contactIp: String? = null
@@ -37,7 +42,7 @@ class ReceiveCallActivity : Activity() {
                 val address = InetAddress.getByName(contactIp)
                 Log.i(LOG_TAG, "Calling $address")
                 IN_CALL = true
-                call = AudioCall(address)
+                call = AudioCall(getMinSupportedSampleRate(), address)
                 call!!.startCall()
                 // Hide the buttons as they're not longer required
                 val accept = findViewById<View>(R.id.buttonAccept) as Button
@@ -51,16 +56,43 @@ class ReceiveCallActivity : Activity() {
                 Log.e(LOG_TAG, "Exception in acceptButton: $e")
             }
         }
-
         // REJECT BUTTON
         val rejectButton = findViewById<View>(R.id.buttonReject) as Button
         rejectButton.setOnClickListener { // Send a reject notification and end the call
             sendMessage("REJ:")
             endCall()
         }
-
         // END BUTTON
         endButton.setOnClickListener { endCall() }
+    }
+
+    private fun getMinSupportedSampleRate(): Int {
+        /*
+     * Valid Audio Sample rates
+     *
+     * @see <a
+     * href="http://en.wikipedia.org/wiki/Sampling_%28signal_processing%29"
+     * >Wikipedia</a>
+     */
+        val validSampleRates = intArrayOf(8000, 11025, 16000, 22050,
+                32000, 37800, 44056, 44100, 47250, 48000, 50000, 50400, 88200,
+                96000, 176400, 192000, 352800, 2822400, 5644800)
+        /*
+     * Selecting default audio input source for recording since
+     * AudioFormat.CHANNEL_CONFIGURATION_DEFAULT is deprecated and selecting
+     * default encoding format.
+     */for (i in validSampleRates.indices) {
+            val result = AudioRecord.getMinBufferSize(validSampleRates[i],
+                    AudioFormat.CHANNEL_IN_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT)
+            if (result != AudioRecord.ERROR && result != AudioRecord.ERROR_BAD_VALUE && result > 0) {
+                // return the mininum supported audio sample rate
+                return validSampleRates[i]
+            }
+        }
+        // If none of the sample rates are supported return -1 handle it in
+        // calling method
+        return -1
     }
 
     private fun endCall() {
@@ -80,7 +112,7 @@ class ReceiveCallActivity : Activity() {
             try {
                 Log.i(LOG_TAG, "Listener started!")
                 val socket = DatagramSocket(BROADCAST_PORT)
-                socket.soTimeout = 1500
+                socket.soTimeout = 5000
                 val buffer = ByteArray(BUF_SIZE)
                 val packet = DatagramPacket(buffer, BUF_SIZE)
                 while (LISTEN) {

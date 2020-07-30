@@ -1,5 +1,7 @@
 package hw.dt83.udpchat
 
+import android.media.AudioFormat
+import android.media.AudioRecord
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -9,6 +11,7 @@ import android.widget.TextView
 import hw.dt83.udpchat.model.config.Utils.Companion.deserializeStringList2HostInfoSet
 import java.io.IOException
 import java.net.*
+
 
 class MakeCallActivity : UDPMessageActivity() {
 
@@ -60,6 +63,35 @@ class MakeCallActivity : UDPMessageActivity() {
         finish()
     }
 
+    private fun getMinSupportedSampleRate(): Int {
+        /*
+     * Valid Audio Sample rates
+     *
+     * @see <a
+     * href="http://en.wikipedia.org/wiki/Sampling_%28signal_processing%29"
+     * >Wikipedia</a>
+     */
+        val validSampleRates = intArrayOf(8000, 11025, 16000, 22050,
+                32000, 37800, 44056, 44100, 47250, 48000, 50000, 50400, 88200,
+                96000, 176400, 192000, 352800, 2822400, 5644800)
+        /*
+     * Selecting default audio input source for recording since
+     * AudioFormat.CHANNEL_CONFIGURATION_DEFAULT is deprecated and selecting
+     * default encoding format.
+     */for (i in validSampleRates.indices) {
+            val result = AudioRecord.getMinBufferSize(validSampleRates[i],
+                    AudioFormat.CHANNEL_IN_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT)
+            if (result != AudioRecord.ERROR && result != AudioRecord.ERROR_BAD_VALUE && result > 0) {
+                // return the mininum supported audio sample rate
+                return validSampleRates[i]
+            }
+        }
+        // If none of the sample rates are supported return -1 handle it in
+        // calling method
+        return -1
+    }
+
     private fun startListener() {
         // Create listener thread
         LISTEN = true
@@ -78,8 +110,9 @@ class MakeCallActivity : UDPMessageActivity() {
                         Log.i(LOG_TAG, "Packet received from " + packet.address + " with contents: " + data)
                         val action = data.substring(0, 4)
                         if (action == "ACC:") {
+
                             // Accept notification received. Start call
-                            call = AudioCall(packet.address)
+                            call = AudioCall(getMinSupportedSampleRate(), packet.address)
                             call!!.startCall()
                             IN_CALL = true
                         } else if (action == "REJ:") {
