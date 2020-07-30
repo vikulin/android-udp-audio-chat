@@ -1,11 +1,7 @@
 package hw.dt83.udpchat
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.media.*
 import android.util.Log
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import java.io.IOException
 import java.net.*
 
@@ -53,11 +49,14 @@ class AudioCall(// Address to call
                 while (mic) {
                     // Capture audio from the mic and transmit it
                     bytes_read = audioRecorder.read(buf, 0, BUF_SIZE)
-                    val packet = DatagramPacket(buf, bytes_read, address, port)
-                    socket.send(packet)
-                    bytes_sent += bytes_read
+                    if(bytes_read>0) {
+                        val packet = DatagramPacket(buf, bytes_read, address, port)
+                        socket.send(packet)
+                        bytes_sent += bytes_read
+                    } else {
+                        Thread.sleep(SAMPLE_INTERVAL.toLong(), 0)
+                    }
                     //Log.i(LOG_TAG, "Total bytes sent: $bytes_sent")
-                    Thread.sleep(SAMPLE_INTERVAL.toLong(), 0)
                 }
                 // Stop recording and release resources
                 audioRecorder.stop()
