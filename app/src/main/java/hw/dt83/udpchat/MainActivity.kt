@@ -26,6 +26,16 @@ import java.net.InetAddress
 import java.net.SocketException
 
 class MainActivity : Activity() {
+
+    companion object {
+        const val HOST_LIST = "HOST_LIST"
+        const val LOG_TAG = "UDPchat"
+        private const val LISTENER_PORT = 50003
+        private const val BUF_SIZE = 1024
+        const val EXTRA_CONTACT = "hw.dt83.udpchat.CONTACT"
+        const val EXTRA_IP = "hw.dt83.udpchat.IP"
+    }
+
     private var contactManager: ContactManager? = null
     private var displayName: String? = null
     private var STARTED = false
@@ -210,13 +220,4 @@ class MainActivity : Activity() {
         startCallListener()
     }
 
-    companion object {
-        const val HOST_LIST = "HOST_LIST"
-        const val LOG_TAG = "UDPchat"
-        private const val LISTENER_PORT = 50003
-        private const val BUF_SIZE = 1024
-        const val EXTRA_CONTACT = "hw.dt83.udpchat.CONTACT"
-        const val EXTRA_IP = "hw.dt83.udpchat.IP"
-        const val EXTRA_DISPLAYNAME = "hw.dt83.udpchat.DISPLAYNAME"
-    }
 }

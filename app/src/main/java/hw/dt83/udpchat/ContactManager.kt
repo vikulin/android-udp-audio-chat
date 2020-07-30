@@ -18,7 +18,6 @@ class ContactManager {
         this.preferences = preferences
     }
     lateinit var preferences: SharedPreferences
-    private var broadcastIP: InetAddress? = null
 
     fun getContacts(): MutableSet<HostInfo> {
         return deserializeStringSet2HostInfoSet(preferences.getStringSet(CURRENT_HOST, HashSet())!!)
@@ -34,19 +33,7 @@ class ContactManager {
 
     }
 
-
-
     companion object {
-        private const val LOG_TAG = "ContactManager"
-        const val BROADCAST_PORT = 50001 // Socket on which packets are sent/received
-        private const val BROADCAST_INTERVAL = 10000 // Milliseconds
-        private const val BROADCAST_BUF_SIZE = 1024
         const val CURRENT_HOST = "CURRENT_HOST"
-    }
-
-    init {
-        broadcastIP = broadcastIP
-        //listen();
-        //broadcastName(name, broadcastIP);
     }
 }
