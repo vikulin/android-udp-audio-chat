@@ -10,65 +10,22 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".MainActivity" >
 
-    <TextView
-        android:id="@+id/textViewEnterName"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/enterName" />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
-
-        <EditText
-            android:id="@+id/editTextDisplayName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:ems="10"
-            android:inputType="textPersonName"
-            android:maxLength="15"
-            android:singleLine="true" >
-
-            <requestFocus />
-        </EditText>
-
         <Button
-            android:id="@+id/buttonStart"
+            android:id="@+id/buttonAddContact"
             style="?android:attr/buttonStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/submitName" />
-    </LinearLayout>
-
-        <TextView
-            android:id="@+id/textViewSelectContact"
+            android:text="@string/add_contact" />
+        <Button
+            android:id="@+id/buttonCall"
+            style="?android:attr/buttonStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/selectContact"
-            android:visibility="invisible" />
-
-        <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
-
-            <Button
-                android:id="@+id/buttonAddContact"
-                style="?android:attr/buttonStyleSmall"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/add_contact"
-                android:visibility="invisible" />
-	    
-            <Button
-	            android:id="@+id/buttonCall"
-	            style="?android:attr/buttonStyleSmall"
-	            android:layout_width="wrap_content"
-	            android:layout_height="wrap_content"
-	            android:text="@string/call"
-	            android:visibility="invisible" />
-	 	</LinearLayout>
+            android:text="@string/call" />
+    </LinearLayout>
 
     <ListView
         android:id="@+id/peerList"

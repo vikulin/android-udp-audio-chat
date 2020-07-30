@@ -47,30 +47,11 @@ class MainActivity : UDPMessageActivity() {
         setContentView(R.layout.activity_main)
         Log.i(LOG_TAG, "UDPChat started")
 
-        // START BUTTON
-        // Pressing this buttons initiates the main functionality
-        val btnStart = findViewById<View>(R.id.buttonStart) as Button
-        btnStart.setOnClickListener {
-            Log.i(LOG_TAG, "Start button pressed")
-            STARTED = true
-            val displayNameText = findViewById<View>(R.id.editTextDisplayName) as EditText
-            displayName = displayNameText.text.toString()
-            displayNameText.isEnabled = false
-            btnStart.isEnabled = false
-            val text = findViewById<View>(R.id.textViewSelectContact) as TextView
-            text.visibility = View.VISIBLE
-            val updateButton = findViewById<View>(R.id.buttonAddContact) as Button
-            updateButton.visibility = View.VISIBLE
-            val callButton = findViewById<View>(R.id.buttonCall) as Button
-            callButton.visibility = View.VISIBLE
-            val listView = findViewById<View>(R.id.peerList) as ListView
-            listView.visibility = View.VISIBLE
-            contactManager = ContactManager(this.baseContext)
-            startCallListener()
-            var hostList = contactManager!!.getContacts()
-            var adapter = SelectHostInfoListAdapter(this, ArrayList(hostList), HashSet())
-            findViewById<ListView>(R.id.peerList).adapter = adapter
-        }
+        contactManager = ContactManager(this.baseContext)
+        startCallListener()
+        var hostList = contactManager!!.getContacts()
+        var adapter = SelectHostInfoListAdapter(this, ArrayList(hostList), HashSet())
+        findViewById<ListView>(R.id.peerList).adapter = adapter
 
         val btnAddContact = findViewById<View>(R.id.buttonAddContact) as Button
         btnAddContact.setOnClickListener { addNewContact() }
@@ -121,12 +102,13 @@ class MainActivity : UDPMessageActivity() {
             var ip = ipInput.text.toString().toLowerCase()
             GlobalScope.launch {
                 var di = HostInfo(InetAddress.getByName("["+ip+"]"),"User contact")
+                /*
                 try {
                     var ping = ping(di.address, MainActivity.LISTENER_PORT)
                     di.ping = ping
                 } catch(e: Throwable){
                     di.ping = Int.MAX_VALUE
-                }
+                }*/
                 withContext(Dispatchers.Main) {
                     var selectAdapter = (findViewById<ListView>(R.id.peerList).adapter as SelectHostInfoListAdapter)
                     selectAdapter.addItem(0, di)
