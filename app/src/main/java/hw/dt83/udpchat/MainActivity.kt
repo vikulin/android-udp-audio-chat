@@ -25,12 +25,13 @@ import java.net.DatagramSocket
 import java.net.InetAddress
 import java.net.SocketException
 
-class MainActivity : Activity() {
+class MainActivity : UDPMessageActivity() {
 
     companion object {
         const val HOST_LIST = "HOST_LIST"
         const val LOG_TAG = "UDPchat"
-        private const val LISTENER_PORT = 50003
+        const val LISTENER_PORT = 50003
+        const val BROADCAST_PORT = 50002
         private const val BUF_SIZE = 1024
         const val EXTRA_CONTACT = "hw.dt83.udpchat.CONTACT"
         const val EXTRA_IP = "hw.dt83.udpchat.IP"
@@ -121,7 +122,7 @@ class MainActivity : Activity() {
             GlobalScope.launch {
                 var di = HostInfo(InetAddress.getByName("["+ip+"]"),"User contact")
                 try {
-                    var ping = ping(di.address, 50002)
+                    var ping = ping(di.address, MainActivity.LISTENER_PORT)
                     di.ping = ping
                 } catch(e: Throwable){
                     di.ping = Int.MAX_VALUE
@@ -167,6 +168,12 @@ class MainActivity : Activity() {
                             //LISTEN = false;
                             //stopCallListener();
                             startActivity(intent)
+                        } else
+                        if (action == "PING") {
+                            // Received a ping request. Respond with pong
+                            val address = packet.address.toString()
+                            val name = data.substring(4, packet.length)
+                            pong(InetAddress.getByName(address))
                         } else {
                             // Received an invalid request
                             Log.w(LOG_TAG, packet.address.toString() + " sent invalid message: " + data)
@@ -182,6 +189,11 @@ class MainActivity : Activity() {
             }
         })
         listener.start()
+    }
+
+    private fun pong(address: InetAddress) {
+        // Send a request to start a call
+        sendMessage("PONG$displayName", address, MainActivity.LISTENER_PORT)
     }
 
     private fun stopCallListener() {

@@ -1,21 +1,22 @@
 package hw.dt83.udpchat
 
-import android.Manifest
-import android.app.Activity
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import hw.dt83.udpchat.model.config.Utils.Companion.deserializeStringList2HostInfoSet
 import java.io.IOException
 import java.net.*
 
-class MakeCallActivity : Activity() {
+class MakeCallActivity : UDPMessageActivity() {
+
+    companion object {
+        private const val LOG_TAG = "MakeCall"
+        private const val BUF_SIZE = 1024
+    }
+
     private var displayName: String? = null
     private var contactName: String? = null
     private var address: InetAddress? = null
@@ -46,7 +47,7 @@ class MakeCallActivity : Activity() {
 
     private fun makeCall() {
         // Send a request to start a call
-        sendMessage("CAL:$displayName", 50003)
+        sendMessage("CAL:$displayName", address, MainActivity.LISTENER_PORT)
     }
 
     private fun endCall() {
@@ -55,7 +56,7 @@ class MakeCallActivity : Activity() {
         if (IN_CALL) {
             call!!.endCall()
         }
-        sendMessage("END:", BROADCAST_PORT)
+        sendMessage("END:", address, MainActivity.BROADCAST_PORT)
         finish()
     }
 
@@ -65,7 +66,7 @@ class MakeCallActivity : Activity() {
         val listenThread = Thread(Runnable {
             try {
                 Log.i(LOG_TAG, "Listener started!")
-                val socket = DatagramSocket(BROADCAST_PORT)
+                val socket = DatagramSocket(MainActivity.BROADCAST_PORT)
                 socket.soTimeout = 15000
                 val buffer = ByteArray(BUF_SIZE)
                 val packet = DatagramPacket(buffer, BUF_SIZE)
@@ -118,37 +119,9 @@ class MakeCallActivity : Activity() {
         LISTEN = false
     }
 
-    private fun sendMessage(message: String, port: Int) {
-        // Creates a thread used for sending notifications
-        val replyThread = Thread(Runnable {
-            try {
-                val data = message.toByteArray()
-                val socket = DatagramSocket()
-                val packet = DatagramPacket(data, data.size, address, port)
-                socket.send(packet)
-                Log.i(LOG_TAG, "Sent message( $message ) to $address")
-                socket.disconnect()
-                socket.close()
-            } catch (e: UnknownHostException) {
-                Log.e(LOG_TAG, "Failure. UnknownHostException in sendMessage: $address")
-            } catch (e: SocketException) {
-                Log.e(LOG_TAG, "Failure. SocketException in sendMessage: $e")
-            } catch (e: IOException) {
-                Log.e(LOG_TAG, "Failure. IOException in sendMessage: $e")
-            }
-        })
-        replyThread.start()
-    }
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.make_call, menu)
         return true
-    }
-
-    companion object {
-        private const val LOG_TAG = "MakeCall"
-        private const val BROADCAST_PORT = 50002
-        private const val BUF_SIZE = 1024
     }
 }

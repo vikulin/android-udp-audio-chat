@@ -2,9 +2,9 @@ package hw.dt83.udpchat.model.config
 
 import com.google.gson.Gson
 import hw.dt83.udpchat.model.HostInfo
+import java.net.DatagramPacket
+import java.net.DatagramSocket
 import java.net.InetAddress
-import java.net.InetSocketAddress
-import java.net.Socket
 
 class Utils {
 
@@ -13,10 +13,20 @@ class Utils {
         @JvmStatic
         fun ping(address: InetAddress, port: Int): Int {
             val start = System.currentTimeMillis()
-            val socket = Socket()
             try {
-                socket.connect(InetSocketAddress(address, port), 5000)
-                socket.close()
+                val msg = "PING"
+
+                val s = DatagramSocket()
+                val hi = DatagramPacket(msg.toByteArray(), msg.length,
+                        address, port)
+                s.send(hi)
+                // get their responses!
+                // get their responses!
+                val buf = ByteArray(1000)
+                val recv = DatagramPacket(buf, buf.size)
+                s.receive(recv)
+                println(String(buf))
+
             } catch (e: Exception) {
                 e.printStackTrace()
                 print(address)
