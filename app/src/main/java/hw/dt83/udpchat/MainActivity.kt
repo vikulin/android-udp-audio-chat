@@ -125,6 +125,7 @@ class MainActivity : Activity() {
     private fun startCallListener(adapter: SelectHostInfoListAdapter) {
         // Creates the listener thread
         LISTEN = true
+        val timestampMap = mutableMapOf<String, Long?>()
         val listener = Thread(Runnable {
             try {
                 // Set up the socket and packet to receive
@@ -133,7 +134,6 @@ class MainActivity : Activity() {
                 socket.soTimeout = 1000
                 val buffer = ByteArray(BUF_SIZE)
                 val packet = DatagramPacket(buffer, BUF_SIZE)
-                val timestampMap = mutableMapOf<String, Long?>()
                 while (LISTEN) {
                     // Listen for incoming call requests
                     try {
@@ -181,12 +181,6 @@ class MainActivity : Activity() {
                         }
                     } catch (e: Exception) {
                     }
-                    //Send ping to all
-                    var hosts = adapter.getAllItems()
-                    for(h in hosts){
-                        timestampMap[h.address.toString()] = System.currentTimeMillis()
-                        ping(h.address, LISTENER_PORT)
-                    }
                 }
                 Log.i(LOG_TAG, "Call Listener ending")
                 socket.disconnect()
@@ -195,7 +189,20 @@ class MainActivity : Activity() {
                 Log.e(LOG_TAG, "SocketException in listener $e")
             }
         })
+        val pinger = Thread(Runnable {
+            while (LISTEN) {
+                //Send ping to all
+                var hosts = adapter.getAllItems()
+                for (h in hosts) {
+                    timestampMap[h.address.toString()] = System.currentTimeMillis()
+                    ping(h.address, LISTENER_PORT)
+                }
+                Thread.sleep(1000)
+            }
+        })
+
         listener.start()
+        pinger.start()
     }
 
     private fun stopCallListener() {
