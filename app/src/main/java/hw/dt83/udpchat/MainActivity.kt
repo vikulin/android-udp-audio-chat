@@ -158,7 +158,7 @@ class MainActivity : Activity() {
                             // Received a ping request. Respond with pong
                             val address = packet.address.toString()
                             val name = data.substring(4, packet.length)
-                            pong(InetAddress.getByName(address), MainActivity.LISTENER_PORT)
+                            pong(packet.address, LISTENER_PORT)
                         } else
                         if (action == "PONG") {
                             // Received a pong response
@@ -167,7 +167,11 @@ class MainActivity : Activity() {
                             if(timestampMap[address]!=null){
                                 var delta =  System.currentTimeMillis() - timestampMap[address]!!
                                 runOnUiThread {
-                                    adapter.updatePing(packet.address, delta.toInt())
+                                    if(delta>=5000){
+                                        adapter.updatePing(packet.address, Int.MAX_VALUE)
+                                    } else {
+                                        adapter.updatePing(packet.address, delta.toInt())
+                                    }
                                     adapter.notifyDataSetChanged()
                                 }
                             }
@@ -181,7 +185,7 @@ class MainActivity : Activity() {
                     var hosts = adapter.getAllItems()
                     for(h in hosts){
                         timestampMap[h.address.toString()] = System.currentTimeMillis()
-                        ping(h.address, MainActivity.LISTENER_PORT)
+                        ping(h.address, LISTENER_PORT)
                     }
                 }
                 Log.i(LOG_TAG, "Call Listener ending")
