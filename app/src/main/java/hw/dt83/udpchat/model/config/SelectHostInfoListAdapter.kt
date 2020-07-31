@@ -10,6 +10,7 @@ import android.widget.CheckBox
 import android.widget.TextView
 import hw.dt83.udpchat.R
 import hw.dt83.udpchat.model.HostInfo
+import java.net.InetAddress
 
 class SelectHostInfoListAdapter(
         context: Context,
@@ -35,22 +36,22 @@ class SelectHostInfoListAdapter(
         if (listItem == null) {
             listItem = LayoutInflater.from(mContext).inflate(R.layout.host_list_item_edit, parent, false)
             hostInfoHolder.checkbox = listItem.findViewById(R.id.checkbox) as CheckBox
-            hostInfoHolder.dnsInfoText = listItem.findViewById(R.id.hostInfoText) as TextView
+            hostInfoHolder.hostInfoText = listItem.findViewById(R.id.hostInfoText) as TextView
             hostInfoHolder.ping = listItem.findViewById(R.id.ping) as TextView
             listItem.tag = hostInfoHolder
         } else {
             hostInfoHolder = listItem.tag as HostInfoHolder
         }
         val currentHost = allHost[position]
-        val dnsId = currentHost.toString()
+        val hostAddress = currentHost.toString()
         if(currentHost.ping == Int.MAX_VALUE){
-            hostInfoHolder.dnsInfoText.text = dnsId
+            hostInfoHolder.hostInfoText.text = hostAddress
             hostInfoHolder.ping.text=""
-            hostInfoHolder.dnsInfoText.setTextColor(Color.GRAY)
+            hostInfoHolder.hostInfoText.setTextColor(Color.GRAY)
         } else {
-            hostInfoHolder.dnsInfoText.text = dnsId
+            hostInfoHolder.hostInfoText.text = hostAddress
             hostInfoHolder.ping.text = currentHost.ping.toString() + " ms"
-            hostInfoHolder.dnsInfoText.setTextColor(Color.WHITE)
+            hostInfoHolder.hostInfoText.setTextColor(Color.WHITE)
         }
         hostInfoHolder.checkbox.setOnCheckedChangeListener { _, isChecked ->
             if(isChecked){
@@ -86,6 +87,18 @@ class SelectHostInfoListAdapter(
         this.notifyDataSetChanged()
     }
 
+    fun updatePing(address: InetAddress, ping: Int){
+        for (h in allHost){
+            if (h.address.equals(address)){
+                h.ping = ping
+            }
+        }
+    }
+
+    fun getAllItems(): MutableList<HostInfo>{
+        return allHost
+    }
+
     fun sort(){
         allHost = ArrayList(allHost.sortedWith(compareBy { it.ping }))
         this.notifyDataSetChanged()
@@ -93,7 +106,7 @@ class SelectHostInfoListAdapter(
 
     class HostInfoHolder {
         lateinit var checkbox: CheckBox
-        lateinit var dnsInfoText: TextView
+        lateinit var hostInfoText: TextView
         lateinit var ping: TextView
     }
 }

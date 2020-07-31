@@ -14,7 +14,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import hw.dt83.udpchat.model.HostInfo
 import hw.dt83.udpchat.model.config.SelectHostInfoListAdapter
+import hw.dt83.udpchat.model.config.Utils
 import hw.dt83.udpchat.model.config.Utils.Companion.ping
+import hw.dt83.udpchat.model.config.Utils.Companion.pong
 import hw.dt83.udpchat.model.config.Utils.Companion.serializeHostInfoSet2StringList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -25,7 +27,7 @@ import java.net.DatagramSocket
 import java.net.InetAddress
 import java.net.SocketException
 
-class MainActivity : UDPMessageActivity() {
+class MainActivity : Activity() {
 
     companion object {
         const val HOST_LIST = "HOST_LIST"
@@ -47,20 +49,22 @@ class MainActivity : UDPMessageActivity() {
         setContentView(R.layout.activity_main)
         Log.i(LOG_TAG, "UDPChat started")
         contactManager = ContactManager(this.baseContext)
-        startCallListener()
+
         var hostList = contactManager!!.getContacts()
         var adapter = SelectHostInfoListAdapter(this, ArrayList(hostList), HashSet())
         findViewById<ListView>(R.id.peerList).adapter = adapter
-
+        startCallListener(adapter)
         val btnAddContact = findViewById<View>(R.id.buttonAddContact) as Button
-        btnAddContact.setOnClickListener { addNewContact() }
+        btnAddContact.setOnClickListener {
+            addNewContact(adapter)
+        }
 
         // CALL BUTTON
         // Attempts to initiate an audio chat session with the selected device
         val btnCall = findViewById<View>(R.id.buttonCall) as Button
         btnCall.setOnClickListener(View.OnClickListener {
-            var selectAdapter = (findViewById<ListView>(R.id.peerList).adapter as SelectHostInfoListAdapter)
-            var selectedHost = selectAdapter.getSelectedHost()
+
+            var selectedHost = adapter.getSelectedHost()
 
             if (selectedHost.isEmpty()) {
                 // If no device was selected, present an error message to the user
@@ -89,7 +93,7 @@ class MainActivity : UDPMessageActivity() {
         }
     }
 
-    private fun addNewContact() {
+    private fun addNewContact(adapter: SelectHostInfoListAdapter) {
         val view: View = LayoutInflater.from(this).inflate(R.layout.new_host_dialog, null)
 
         val ab: AlertDialog.Builder = AlertDialog.Builder(this)
@@ -109,9 +113,8 @@ class MainActivity : UDPMessageActivity() {
                     di.ping = Int.MAX_VALUE
                 }*/
                 withContext(Dispatchers.Main) {
-                    var selectAdapter = (findViewById<ListView>(R.id.peerList).adapter as SelectHostInfoListAdapter)
-                    selectAdapter.addItem(0, di)
-                    selectAdapter.notifyDataSetChanged()
+                    adapter.addItem(0, di)
+                    adapter.notifyDataSetChanged()
                     ad.dismiss()
                     contactManager?.addContact(di)
                 }
@@ -119,7 +122,7 @@ class MainActivity : UDPMessageActivity() {
         }
     }
 
-    private fun startCallListener() {
+    private fun startCallListener(adapter: SelectHostInfoListAdapter) {
         // Creates the listener thread
         LISTEN = true
         val listener = Thread(Runnable {
@@ -130,6 +133,7 @@ class MainActivity : UDPMessageActivity() {
                 socket.soTimeout = 1000
                 val buffer = ByteArray(BUF_SIZE)
                 val packet = DatagramPacket(buffer, BUF_SIZE)
+                val timestampMap = mutableMapOf<String, Long?>()
                 while (LISTEN) {
                     // Listen for incoming call requests
                     try {
@@ -146,20 +150,38 @@ class MainActivity : UDPMessageActivity() {
                             intent.putExtra(EXTRA_CONTACT, name)
                             intent.putExtra(EXTRA_IP, address.substring(1, address.length))
                             IN_CALL = true
-                            //LISTEN = false;
-                            //stopCallListener();
+                            LISTEN = false;
+                            stopCallListener();
                             startActivity(intent)
                         } else
                         if (action == "PING") {
                             // Received a ping request. Respond with pong
                             val address = packet.address.toString()
                             val name = data.substring(4, packet.length)
-                            pong(InetAddress.getByName(address))
+                            pong(InetAddress.getByName(address), MainActivity.LISTENER_PORT)
+                        } else
+                        if (action == "PONG") {
+                            // Received a pong response
+                            val address = packet.address.toString()
+                            //update contact list with ping timestamp delta
+                            if(timestampMap[address]!=null){
+                                var delta =  System.currentTimeMillis() - timestampMap[address]!!
+                                runOnUiThread {
+                                    adapter.updatePing(packet.address, delta.toInt())
+                                    adapter.notifyDataSetChanged()
+                                }
+                            }
                         } else {
                             // Received an invalid request
                             Log.w(LOG_TAG, packet.address.toString() + " sent invalid message: " + data)
                         }
                     } catch (e: Exception) {
+                    }
+                    //Send ping to all
+                    var hosts = adapter.getAllItems()
+                    for(h in hosts){
+                        timestampMap[h.address.toString()] = System.currentTimeMillis()
+                        ping(h.address, MainActivity.LISTENER_PORT)
                     }
                 }
                 Log.i(LOG_TAG, "Call Listener ending")
@@ -170,11 +192,6 @@ class MainActivity : UDPMessageActivity() {
             }
         })
         listener.start()
-    }
-
-    private fun pong(address: InetAddress) {
-        // Send a request to start a call
-        sendMessage("PONG$displayName", address, MainActivity.LISTENER_PORT)
     }
 
     private fun stopCallListener() {
@@ -210,7 +227,7 @@ class MainActivity : UDPMessageActivity() {
         IN_CALL = false
         STARTED = true
         contactManager = ContactManager(this.baseContext)
-        startCallListener()
+        startCallListener(findViewById<ListView>(R.id.peerList).adapter as SelectHostInfoListAdapter)
     }
 
 }

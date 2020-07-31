@@ -1,5 +1,6 @@
 package hw.dt83.udpchat
 
+import android.app.Activity
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.os.Bundle
@@ -8,12 +9,13 @@ import android.view.Menu
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import hw.dt83.udpchat.model.config.Utils
 import hw.dt83.udpchat.model.config.Utils.Companion.deserializeStringList2HostInfoSet
 import java.io.IOException
 import java.net.*
 
 
-class MakeCallActivity : UDPMessageActivity() {
+class MakeCallActivity : Activity() {
 
     companion object {
         private const val LOG_TAG = "MakeCall"
@@ -50,7 +52,7 @@ class MakeCallActivity : UDPMessageActivity() {
 
     private fun makeCall() {
         // Send a request to start a call
-        sendMessage("CAL:$displayName", address, MainActivity.LISTENER_PORT)
+        Utils.sendMessage("CAL:$displayName", address, MainActivity.LISTENER_PORT)
     }
 
     private fun endCall() {
@@ -59,7 +61,7 @@ class MakeCallActivity : UDPMessageActivity() {
         if (IN_CALL) {
             call!!.endCall()
         }
-        sendMessage("END:", address, MainActivity.BROADCAST_PORT)
+        Utils.sendMessage("END:", address, MainActivity.BROADCAST_PORT)
         finish()
     }
 
