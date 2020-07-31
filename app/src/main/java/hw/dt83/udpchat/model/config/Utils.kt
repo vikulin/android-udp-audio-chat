@@ -21,6 +21,8 @@ class Utils {
                 val hi = DatagramPacket(msg.toByteArray(), msg.length,
                         address, port)
                 s.send(hi)
+                s.disconnect()
+                s.close()
             } catch (e: Exception) {
                 e.printStackTrace()
                 print(address)
@@ -36,6 +38,8 @@ class Utils {
                 val hi = DatagramPacket(msg.toByteArray(), msg.length,
                         address, port)
                 s.send(hi)
+                s.disconnect()
+                s.close()
             } catch (e: Exception) {
                 e.printStackTrace()
                 print(address)
