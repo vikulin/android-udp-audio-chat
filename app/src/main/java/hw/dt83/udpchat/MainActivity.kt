@@ -197,7 +197,7 @@ class MainActivity : Activity() {
                     timestampMap[h.address.toString()] = System.currentTimeMillis()
                     ping(h.address, LISTENER_PORT)
                 }
-                Thread.sleep(1000)
+                Thread.sleep(10)
             }
         })
 
