@@ -165,11 +165,7 @@ class MainActivity : Activity() {
                             val address = packet.address.toString()
                             //update contact list with ping timestamp delta
                             if(pingMap[address]!=null){
-                                var delta = System.currentTimeMillis() - pingMap[address]!!
                                 pongMap[address] = System.currentTimeMillis()
-                                runOnUiThread {
-                                    adapter.updatePing(packet.address, delta.toInt())
-                                }
                             }
                         } else {
                             // Received an invalid request
@@ -202,16 +198,18 @@ class MainActivity : Activity() {
                 var hosts = adapter.getAllItems()
                 for (h in hosts) {
                     if(pongMap[h.address.toString()]!=null) {
-                        var delta = pingMap[h.address.toString()]!! - pongMap[h.address.toString()]!!
+                        var delta = pongMap[h.address.toString()]!! - pingMap[h.address.toString()]!!
                         if(delta>=5000){
                             adapter.updatePing(h.address, Int.MAX_VALUE)
+                        } else {
+                            adapter.updatePing(h.address, delta.toInt())
                         }
                     }
                 }
                 runOnUiThread {
                     adapter.notifyDataSetChanged()
                 }
-                Thread.sleep(2000)
+                Thread.sleep(1000)
             }
         })
 
