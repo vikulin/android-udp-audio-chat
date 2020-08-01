@@ -156,8 +156,8 @@ class MainActivity : Activity() {
                         } else
                         if (action == "PING") {
                             // Received a ping request. Respond with pong
-                            val address = packet.address.toString()
-                            val name = data.substring(4, packet.length)
+                            //val address = packet.address.toString()
+                            //val name = data.substring(4, packet.length)
                             pong(packet.address, LISTENER_PORT)
                         } else
                         if (action == "PONG") {
@@ -172,7 +172,7 @@ class MainActivity : Activity() {
                                     } else {
                                         adapter.updatePing(packet.address, delta.toInt())
                                     }
-                                    adapter.notifyDataSetChanged()
+                                    //adapter.notifyDataSetChanged()
                                 }
                             }
                         } else {
@@ -201,8 +201,19 @@ class MainActivity : Activity() {
             }
         })
 
+        val updater = Thread(Runnable {
+            while (LISTEN) {
+                //Send ping to all
+                runOnUiThread {
+                    adapter.notifyDataSetChanged()
+                }
+                Thread.sleep(2000)
+            }
+        })
+
         listener.start()
         pinger.start()
+        updater.start()
     }
 
     private fun stopCallListener() {
