@@ -104,13 +104,6 @@ class MainActivity : Activity() {
             var ip = ipInput.text.toString().toLowerCase()
             GlobalScope.launch {
                 var di = HostInfo(InetAddress.getByName("["+ip+"]"),"User contact")
-                /*
-                try {
-                    var ping = ping(di.address, MainActivity.LISTENER_PORT)
-                    di.ping = ping
-                } catch(e: Throwable){
-                    di.ping = Int.MAX_VALUE
-                }*/
                 withContext(Dispatchers.Main) {
                     adapter.addItem(0, di)
                     adapter.notifyDataSetChanged()
@@ -231,7 +224,7 @@ class MainActivity : Activity() {
             //contactManager.bye(displayName);
             //contactManager.stopBroadcasting();
             //contactManager.stopListening();
-            //STARTED = false;
+            STARTED = false;
         }
         stopCallListener()
         Log.i(LOG_TAG, "App paused!")
