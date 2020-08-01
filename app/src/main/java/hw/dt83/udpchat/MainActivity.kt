@@ -14,7 +14,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import hw.dt83.udpchat.model.HostInfo
 import hw.dt83.udpchat.model.config.SelectHostInfoListAdapter
-import hw.dt83.udpchat.model.config.Utils
 import hw.dt83.udpchat.model.config.Utils.Companion.ping
 import hw.dt83.udpchat.model.config.Utils.Companion.pong
 import hw.dt83.udpchat.model.config.Utils.Companion.serializeHostInfoSet2StringList
@@ -125,7 +124,8 @@ class MainActivity : Activity() {
     private fun startCallListener(adapter: SelectHostInfoListAdapter) {
         // Creates the listener thread
         LISTEN = true
-        val timestampMap = mutableMapOf<String, Long?>()
+        val pingMap = mutableMapOf<String, Long?>()
+        val pongMap = mutableMapOf<String, Long?>()
         val listener = Thread(Runnable {
             try {
                 // Set up the socket and packet to receive
@@ -164,15 +164,11 @@ class MainActivity : Activity() {
                             // Received a pong response
                             val address = packet.address.toString()
                             //update contact list with ping timestamp delta
-                            if(timestampMap[address]!=null){
-                                var delta =  System.currentTimeMillis() - timestampMap[address]!!
+                            if(pingMap[address]!=null){
+                                var delta = System.currentTimeMillis() - pingMap[address]!!
+                                pongMap[address] = System.currentTimeMillis()
                                 runOnUiThread {
-                                    if(delta>=5000){
-                                        adapter.updatePing(packet.address, Int.MAX_VALUE)
-                                    } else {
-                                        adapter.updatePing(packet.address, delta.toInt())
-                                    }
-                                    //adapter.notifyDataSetChanged()
+                                    adapter.updatePing(packet.address, delta.toInt())
                                 }
                             }
                         } else {
@@ -194,7 +190,7 @@ class MainActivity : Activity() {
                 //Send ping to all
                 var hosts = adapter.getAllItems()
                 for (h in hosts) {
-                    timestampMap[h.address.toString()] = System.currentTimeMillis()
+                    pingMap[h.address.toString()] = System.currentTimeMillis()
                     ping(h.address, LISTENER_PORT)
                 }
                 Thread.sleep(10)
@@ -203,7 +199,15 @@ class MainActivity : Activity() {
 
         val updater = Thread(Runnable {
             while (LISTEN) {
-                //Send ping to all
+                var hosts = adapter.getAllItems()
+                for (h in hosts) {
+                    if(pongMap[h.address.toString()]!=null) {
+                        var delta = pingMap[h.address.toString()]!! - pongMap[h.address.toString()]!!
+                        if(delta>=5000){
+                            adapter.updatePing(h.address, Int.MAX_VALUE)
+                        }
+                    }
+                }
                 runOnUiThread {
                     adapter.notifyDataSetChanged()
                 }
