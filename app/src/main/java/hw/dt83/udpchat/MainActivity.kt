@@ -157,19 +157,17 @@ class MainActivity : Activity() {
                         if (action == "PING") {
                             // Received a ping request. Respond with pong
                             //val address = packet.address.toString()
-                            //val name = data.substring(4, packet.length)
-                            pong(packet.address, LISTENER_PORT)
+                            val timestamp = data.substring(4, packet.length).toLong()
+                            pong(packet.address, timestamp, LISTENER_PORT)
                         } else
                         if (action == "PONG") {
                             // Received a pong response
-                            val address = packet.address.toString()
                             //update contact list with ping timestamp delta
-                            if(pingMap[address]!=null){
-                                pongMap[address] = System.currentTimeMillis()
-                                var delta = pongMap[address]!! - pingMap[address]!!
-                                runOnUiThread {
-                                    adapter.updatePing(packet.address, delta.toInt())
-                                }
+                            val timestamp = data.substring(4, packet.length).toLong()
+                            pongMap[packet.address.toString()] = System.currentTimeMillis()
+                            var delta = System.currentTimeMillis() - timestamp
+                            runOnUiThread {
+                                adapter.updatePing(packet.address, delta.toInt())
                             }
                         } else {
                             // Received an invalid request
@@ -190,8 +188,9 @@ class MainActivity : Activity() {
                 //Send ping to all
                 var hosts = adapter.getAllItems()
                 for (h in hosts) {
-                    pingMap[h.address.toString()] = System.currentTimeMillis()
-                    ping(h.address, LISTENER_PORT)
+                    val timestamp = System.currentTimeMillis()
+                    pingMap[h.address.toString()] = timestamp
+                    ping(h.address, timestamp, LISTENER_PORT)
                 }
                 Thread.sleep(10)
             }

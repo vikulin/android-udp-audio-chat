@@ -13,10 +13,10 @@ class Utils {
         private const val LOG_TAG = "UDP Message"
 
         @JvmStatic
-        fun ping(address: InetAddress, port: Int) {
+        fun ping(address: InetAddress, timestamp: Long, port: Int) {
             //val start = System.currentTimeMillis()
             try {
-                val msg = "PING"
+                val msg = "PING$timestamp"
                 val s = DatagramSocket()
                 val hi = DatagramPacket(msg.toByteArray(), msg.length,
                         address, port)
@@ -30,10 +30,10 @@ class Utils {
         }
 
         @JvmStatic
-        fun pong(address: InetAddress, port: Int) {
+        fun pong(address: InetAddress, timestamp: Long, port: Int) {
             //val start = System.currentTimeMillis()
             try {
-                val msg = "PONG"
+                val msg = "PONG$timestamp"
                 val s = DatagramSocket()
                 val hi = DatagramPacket(msg.toByteArray(), msg.length,
                         address, port)
